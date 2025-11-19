@@ -9,7 +9,7 @@ module tb_processor;
     reg trace_enable;
     
     // --- NEW: Variables for dynamic testing ---
-    integer input_N = 6;       // Change this to test different numbers (e.g., 5, 6, 7)
+    integer input_N = 8;       // Change this to test different numbers (e.g., 5, 6, 7)
     integer expected_result;
     integer i;
     // ------------------------------------------
