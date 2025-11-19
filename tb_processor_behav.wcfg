@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<wave_config>
+   <wave_state>
+   </wave_state>
+   <db_ref_list>
+      <db_ref path="tb_processor_behav.wdb" id="1">
+         <top_modules>
+            <top_module name="glbl" />
+            <top_module name="tb_processor" />
+         </top_modules>
+      </db_ref>
+   </db_ref_list>
+   <zoom_setting>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="655.001 ns"></ZoomEndTime>
+      <Cursor1Time time="655.000 ns"></Cursor1Time>
+   </zoom_setting>
+   <column_width_setting>
+      <NameColumnWidth column_width="208"></NameColumnWidth>
+      <ValueColumnWidth column_width="156"></ValueColumnWidth>
+   </column_width_setting>
+   <WVObjectSize size="35" />
+   <wvobject fp_name="/tb_processor/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/reset" type="logic">
+      <obj_property name="ElementShortName">reset</obj_property>
+      <obj_property name="ObjectShortName">reset</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_enable" type="logic">
+      <obj_property name="ElementShortName">debug_enable</obj_property>
+      <obj_property name="ObjectShortName">debug_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_step_btn" type="logic">
+      <obj_property name="ElementShortName">debug_step_btn</obj_property>
+      <obj_property name="ObjectShortName">debug_step_btn</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_enable" type="logic">
+      <obj_property name="ElementShortName">trace_enable</obj_property>
+      <obj_property name="ObjectShortName">trace_enable</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_pc" type="array">
+      <obj_property name="ElementShortName">debug_pc[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_pc[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_instruction" type="array">
+      <obj_property name="ElementShortName">debug_instruction[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_instruction[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_state" type="array">
+      <obj_property name="ElementShortName">debug_state[2:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_state[2:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg0" type="array">
+      <obj_property name="ElementShortName">debug_reg0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg1" type="array">
+      <obj_property name="ElementShortName">debug_reg1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg2" type="array">
+      <obj_property name="ElementShortName">debug_reg2[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg2[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg3" type="array">
+      <obj_property name="ElementShortName">debug_reg3[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg3[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg4" type="array">
+      <obj_property name="ElementShortName">debug_reg4[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg4[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg5" type="array">
+      <obj_property name="ElementShortName">debug_reg5[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg5[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg6" type="array">
+      <obj_property name="ElementShortName">debug_reg6[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg6[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_reg7" type="array">
+      <obj_property name="ElementShortName">debug_reg7[15:0]</obj_property>
+      <obj_property name="ObjectShortName">debug_reg7[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/cycle_count" type="array">
+      <obj_property name="ElementShortName">cycle_count[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cycle_count[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf0" type="array">
+      <obj_property name="ElementShortName">trace_buf0[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf0[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf1" type="array">
+      <obj_property name="ElementShortName">trace_buf1[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf1[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf2" type="array">
+      <obj_property name="ElementShortName">trace_buf2[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf2[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf3" type="array">
+      <obj_property name="ElementShortName">trace_buf3[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf3[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf4" type="array">
+      <obj_property name="ElementShortName">trace_buf4[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf4[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf5" type="array">
+      <obj_property name="ElementShortName">trace_buf5[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf5[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf6" type="array">
+      <obj_property name="ElementShortName">trace_buf6[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf6[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf7" type="array">
+      <obj_property name="ElementShortName">trace_buf7[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf7[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf8" type="array">
+      <obj_property name="ElementShortName">trace_buf8[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf8[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf9" type="array">
+      <obj_property name="ElementShortName">trace_buf9[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf9[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf10" type="array">
+      <obj_property name="ElementShortName">trace_buf10[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf10[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf11" type="array">
+      <obj_property name="ElementShortName">trace_buf11[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf11[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf12" type="array">
+      <obj_property name="ElementShortName">trace_buf12[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf12[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf13" type="array">
+      <obj_property name="ElementShortName">trace_buf13[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf13[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf14" type="array">
+      <obj_property name="ElementShortName">trace_buf14[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf14[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_buf15" type="array">
+      <obj_property name="ElementShortName">trace_buf15[15:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_buf15[15:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/trace_count" type="array">
+      <obj_property name="ElementShortName">trace_count[3:0]</obj_property>
+      <obj_property name="ObjectShortName">trace_count[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_processor/debug_step_out" type="logic">
+      <obj_property name="ElementShortName">debug_step_out</obj_property>
+      <obj_property name="ObjectShortName">debug_step_out</obj_property>
+   </wvobject>
+</wave_config>

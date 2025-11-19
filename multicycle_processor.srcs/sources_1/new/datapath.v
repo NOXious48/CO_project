@@ -59,7 +59,7 @@ module datapath (
     wire [5:0] low6 = ir[5:0];
     wire [2:0] rs2 = low6[2:0];
     wire [5:0] imm6 = low6;
-    wire [15:0] imm_ext = {{10{imm6[5]}}, imm6};
+    wire [15:0] imm_ext = {10'b0, imm6};         // This pads the upper bits with Zeros
     
     // Outputs
     assign pc_out = {8'b0, pc};

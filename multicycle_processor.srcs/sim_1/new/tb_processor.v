@@ -65,28 +65,39 @@ module tb_processor;
         forever #5 clk = ~clk;
     end
 
+    // Task definition kept but silence the output
     task display_state;
         begin
+            // Commented out to silence per-cycle logging
+            /*
             $display("T=%0t | PC=%3d | IR=%h | ST=%0d | R1=%3d R2=%3d R3=%3d R4=%3d R5=%3d", 
                      $time, debug_pc[7:0], debug_instruction, debug_state,
                      debug_reg1, debug_reg2, debug_reg3, debug_reg4, debug_reg5);
+            */
         end
     endtask
     
-    // Enhanced monitoring during WRITEBACK
+    // Enhanced monitoring during WRITEBACK - Silenced
     always @(posedge clk) begin
         if (!reset && debug_state == 3'b100) begin  // WRITEBACK state
+            // Commented out to silence writeback logging
+            /*
             $display("  WB: reg_write=%b, mem_to_reg=%b, rd=%0d, alu_result=%h, mem_data=%h", 
                      uut.ctrl.reg_write, uut.ctrl.mem_to_reg, uut.dp.rd,
                      uut.dp.alu_result_reg, uut.dp.mem_data_reg);
+            */
         end
     end
     
-    // Monitor debug_step signal
+    // Monitor debug_step signal - Silenced
     always @(posedge clk) begin
-        if (!reset)
+        if (!reset) begin
+            // Commented out to silence debug step logging
+            /*
             $display("T=%0t | debug_step=%b | state=%0d | debug_step_out=%b", 
                      $time, uut.dbg.debug_step, debug_state, debug_step_out);
+            */
+        end
     end
     
     initial begin
@@ -99,14 +110,17 @@ module tb_processor;
         $display("\n========================================");
         $display(" MULTICYCLE PROCESSOR TESTBENCH START ");
         $display("========================================");
-        $display("Calculating 5! = 120");
-        $display("Time  | PC  | Instruction | ST | R1  | R2  | R3  | R4  | R5");
-        $display("------+-----+-------------+----+-----+-----+-----+-----+----");
+        $display("Calculating 5! = 120... Please wait.");
+        
+        // Removed the per-cycle header print
+        // $display("Time  | PC  | Instruction | ST | R1  | R2  | R3  | R4  | R5");
+        // $display("------+-----+-------------+----+-----+-----+-----+-----+----");
 
         #30 reset = 0;
 
         // Wait for completion or timeout
-        wait(debug_pc == 29 || $time >= 1000000);
+        // Note: Since we silenced the log, this wait is the only thing happening
+        wait(debug_pc == 29 || $time >= 500000); // 500us limit
 
         #100;
 
@@ -125,8 +139,8 @@ module tb_processor;
         else
             $display("\n✗✗✗ TEST FAILED! Expected 120, got %0d ✗✗✗\n", debug_reg2);
 
-        // Print trace buffer
-        $display("\n===== EXECUTION TRACE BUFFER =====");
+        // Trace buffer is usually helpful for the final report, keeping it in.
+        $display("===== EXECUTION TRACE BUFFER (Last 16 Ops) =====");
         $display("Trace Count: %0d/16", trace_count);
         $display("Index | Instruction (hex)");
         $display("------+------------------");
@@ -151,16 +165,17 @@ module tb_processor;
         $finish;
     end
 
-    // Monitor WRITEBACK state
+    // Monitor WRITEBACK state - Silenced
     always @(posedge clk) begin
-        if (!reset && !debug_enable && debug_state == 3'b100)
-            display_state();
+        if (!reset && !debug_enable && debug_state == 3'b100) begin
+             // display_state(); // Commented out
+        end
     end
 
     // Timeout watchdog
     initial begin
-        #1000000;
-        $display("\n*** TIMEOUT: Simulation exceeded 1ms ***");
+        #500000; // 500us timeout
+        $display("\n*** TIMEOUT: Simulation exceeded 500us ***");
         $display("Last PC: %0d", debug_pc);
         $display("Last R2: %0d", debug_reg2);
         $finish;
