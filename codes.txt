@@ -1,0 +1,1060 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// File: processor_top.v (improved - exposes debug_step, configurable trace_enable)
+//////////////////////////////////////////////////////////////////////////////////
+
+module processor_top (
+    input  wire        clk,
+    input  wire        reset,
+    input  wire        debug_enable,
+    input  wire        debug_step_btn,
+    input  wire        trace_enable,       // NEW: control trace buffer externally
+
+    // Debug outputs (connect to LEDs or display)
+    output wire [15:0] debug_pc,
+    output wire [15:0] debug_instruction,
+    output wire [2:0]  debug_state,
+    output wire [15:0] debug_reg0,
+    output wire [15:0] debug_reg1,
+    output wire [15:0] debug_reg2,
+    output wire [15:0] debug_reg3,
+    output wire [15:0] debug_reg4,
+    output wire [15:0] debug_reg5,
+    output wire [15:0] debug_reg6,
+    output wire [15:0] debug_reg7,
+    output wire [31:0] cycle_count,
+
+    // Trace buffer outputs
+    output wire [15:0] trace_buf0, trace_buf1, trace_buf2, trace_buf3,
+    output wire [15:0] trace_buf4, trace_buf5, trace_buf6, trace_buf7,
+    output wire [15:0] trace_buf8, trace_buf9, trace_buf10, trace_buf11,
+    output wire [15:0] trace_buf12, trace_buf13, trace_buf14, trace_buf15,
+    output wire [3:0]  trace_count,
+
+    // DEBUG OBSERVABILITY (exposed)
+    output wire        debug_step_out      // NEW: shows debug_step from debug_interface
+);
+
+    // Internal wires - Controller to Datapath
+    wire        pc_write, mem_read, mem_write, ir_write, reg_write;
+    wire [1:0]  alu_op, pc_src;
+    wire        alu_src_a, alu_src_b, mem_to_reg;
+    wire [2:0]  state_out;
+
+    // Datapath to Controller
+    wire        zero_flag;
+    wire [3:0]  opcode;
+
+    // Memory interface
+    wire [7:0]  mem_addr;
+    wire [15:0] mem_data_in, mem_data_out;
+
+    // Datapath outputs
+    wire [15:0] pc_out, instruction_out;
+    wire [15:0] reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7;
+
+    // Debug interface
+    wire        debug_step;
+
+    // Instantiate Controller (Student A)
+    controller ctrl (
+        .clk(clk),
+        .reset(reset),
+        .debug_step(debug_step),
+        .opcode(opcode),
+        .zero_flag(zero_flag),
+        .pc_write(pc_write),
+        .mem_read(mem_read),
+        .mem_write(mem_write),
+        .ir_write(ir_write),
+        .reg_write(reg_write),
+        .alu_op(alu_op),
+        .pc_src(pc_src),
+        .alu_src_a(alu_src_a),
+        .alu_src_b(alu_src_b),
+        .mem_to_reg(mem_to_reg),
+        .state_out(state_out)
+    );
+
+    // Instantiate Datapath (Student B)
+    datapath dp (
+        .clk(clk),
+        .reset(reset),
+        .pc_write(pc_write),
+        .ir_write(ir_write),
+        .reg_write(reg_write),
+        .alu_op(alu_op),
+        .pc_src(pc_src),
+        .alu_src_a(alu_src_a),
+        .alu_src_b(alu_src_b),
+        .mem_to_reg(mem_to_reg),
+        .state_in(state_out),
+        .mem_data_in(mem_data_in),
+        .mem_addr(mem_addr),
+        .mem_data_out(mem_data_out),
+        .pc_out(pc_out),
+        .instruction_out(instruction_out),
+        .zero_flag(zero_flag),
+        .opcode_out(opcode),
+        .reg0(reg0),
+        .reg1(reg1),
+        .reg2(reg2),
+        .reg3(reg3),
+        .reg4(reg4),
+        .reg5(reg5),
+        .reg6(reg6),
+        .reg7(reg7)
+    );
+
+    // Instantiate Debug Interface (Student C)
+    debug_interface dbg (
+        .clk(clk),
+        .reset(reset),
+        .debug_enable(debug_enable),
+        .debug_step_btn(debug_step_btn),
+        .pc_in(pc_out),
+        .instruction_in(instruction_out),
+        .state_in(state_out),
+        .reg0(reg0),
+        .reg1(reg1),
+        .reg2(reg2),
+        .reg3(reg3),
+        .reg4(reg4),
+        .reg5(reg5),
+        .reg6(reg6),
+        .reg7(reg7),
+        .debug_step(debug_step),
+        .debug_pc(debug_pc),
+        .debug_ir(debug_instruction),
+        .debug_state(debug_state),
+        .debug_reg0(debug_reg0),
+        .debug_reg1(debug_reg1),
+        .debug_reg2(debug_reg2),
+        .debug_reg3(debug_reg3),
+        .debug_reg4(debug_reg4),
+        .debug_reg5(debug_reg5),
+        .debug_reg6(debug_reg6),
+        .debug_reg7(debug_reg7),
+        .cycle_count(cycle_count)
+    );
+
+    // Expose debug_step so we can probe it easily in simulation/waveform
+    assign debug_step_out = debug_step;
+
+    // Instantiate Memory and Trace Buffer (Student D)
+    memory_trace mem (
+        .clk(clk),
+        .reset(reset),
+        .addr(mem_addr),
+        .data_in(mem_data_out),
+        .mem_read(mem_read),
+        .mem_write(mem_write),
+        .data_out(mem_data_in),
+        .trace_pc(pc_out),
+        .trace_instruction(instruction_out),
+        .trace_state(state_out),
+        .trace_enable(trace_enable),   // now controlled from top-level
+        .trace_buf0(trace_buf0),
+        .trace_buf1(trace_buf1),
+        .trace_buf2(trace_buf2),
+        .trace_buf3(trace_buf3),
+        .trace_buf4(trace_buf4),
+        .trace_buf5(trace_buf5),
+        .trace_buf6(trace_buf6),
+        .trace_buf7(trace_buf7),
+        .trace_buf8(trace_buf8),
+        .trace_buf9(trace_buf9),
+        .trace_buf10(trace_buf10),
+        .trace_buf11(trace_buf11),
+        .trace_buf12(trace_buf12),
+        .trace_buf13(trace_buf13),
+        .trace_buf14(trace_buf14),
+        .trace_buf15(trace_buf15),
+        .trace_count(trace_count)
+    );
+
+endmodule
+
+
+`timescale 1ns / 1ps
+
+module memory_trace (
+    input wire clk,
+    input wire reset,
+    
+    // Memory interface
+    input wire [7:0] addr,
+    input wire [15:0] data_in,
+    input wire mem_read,
+    input wire mem_write,
+    output reg [15:0] data_out,
+    
+    // Trace interface
+    input wire [15:0] trace_pc,
+    input wire [15:0] trace_instruction,
+    input wire [2:0] trace_state,
+    input wire trace_enable,
+    
+    // Trace outputs
+    output reg [15:0] trace_buf0, trace_buf1, trace_buf2, trace_buf3,
+    output reg [15:0] trace_buf4, trace_buf5, trace_buf6, trace_buf7,
+    output reg [15:0] trace_buf8, trace_buf9, trace_buf10, trace_buf11,
+    output reg [15:0] trace_buf12, trace_buf13, trace_buf14, trace_buf15,
+    output reg [3:0] trace_count
+);
+
+    localparam WRITEBACK = 3'b100;
+
+    // Combined instruction and data memory (256 words)
+    reg [15:0] memory [0:255];
+    
+    // Internal trace buffer
+    reg [15:0] trace_buffer [0:15];
+    reg [3:0] trace_index;
+
+    integer i;
+
+    // Memory initialization
+    initial begin
+        // Clear all memory
+        for (i = 0; i < 256; i = i + 1)
+            memory[i] = 16'h0000;
+        
+        // Data memory (addresses 40-42)
+        memory[40] = 16'd5;    // N = 5
+        memory[41] = 16'd1;    // Result = 1
+        memory[42] = 16'd1;    // Const 1
+
+        // Program instructions
+        memory[0]  = 16'h2228;  // LOAD R1, [40]  (N=5)
+        memory[1]  = 16'h2429;  // LOAD R2, [41]  (result=1)
+        memory[2]  = 16'h262a;  // LOAD R3, [42]  (const=1)
+        
+        memory[3]  = 16'h0800;  // ADD R4, R0, 0  (R4=0, temp accumulator)
+        memory[4]  = 16'h0a00;  // ADD R5, R0, 0  (R5=0, loop counter)
+
+        // INNER LOOP (address 5-9) - Multiply R2 by R1
+        memory[5]  = 16'h0902;  // ADD R4, R4, R2  (accumulate)
+        memory[6]  = 16'h0b43;  // ADD R5, R5, R3  (R5++, increment counter)
+        memory[7]  = 16'h1c45;  // SUB R6, R1, R5  (check if R5 == R1)
+        memory[8]  = 16'h5c02;  // BEQ R6,R0,+2  (if loop done, skip JUMP)
+        memory[9]  = 16'h4005;  // JUMP 5  (repeat inner loop)
+        
+        // OUTER LOOP (address 10-13) - Decrement N, repeat until N==0
+        memory[10] = 16'h0900;  // ADD R2, R4, 0  (save multiplication result to R2)
+        memory[11] = 16'h1243;  // SUB R1, R1, R3  (N--, decrement N)
+        memory[12] = 16'h5210;  // BEQ R1,R0,+16  (if N==0, jump to STORE at address 28)
+        memory[13] = 16'h4003;  // JUMP 3  (else repeat from outer loop start)
+
+        // HALT (address 28-29)
+        memory[28] = 16'h3429;  // STORE R2, [41]  (save result to memory)
+        memory[29] = 16'h401d;  // JUMP 29  (infinite halt loop)
+    end
+
+    // Memory write (synchronous)
+    always @(posedge clk) begin
+        if (mem_write)
+            memory[addr] <= data_in;
+    end
+
+    // Memory read (COMBINATIONAL)
+    always @(*) begin
+        data_out = memory[addr];
+    end
+
+    // Trace buffer (triggered on WRITEBACK)
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            trace_index <= 4'd0;
+            trace_count <= 4'd0;
+            for (i = 0; i < 16; i = i + 1)
+                trace_buffer[i] <= 16'b0;
+        end
+        else if (trace_enable && (trace_state == WRITEBACK)) begin
+            trace_buffer[trace_index] <= trace_instruction;
+            trace_index <= (trace_index == 4'd15) ? 4'd0 : trace_index + 4'd1;
+            if (trace_count < 4'd15)
+                trace_count <= trace_count + 4'd1;
+        end
+    end
+
+    // Export trace buffer to outputs
+    always @(*) begin
+        trace_buf0  = trace_buffer[0];
+        trace_buf1  = trace_buffer[1];
+        trace_buf2  = trace_buffer[2];
+        trace_buf3  = trace_buffer[3];
+        trace_buf4  = trace_buffer[4];
+        trace_buf5  = trace_buffer[5];
+        trace_buf6  = trace_buffer[6];
+        trace_buf7  = trace_buffer[7];
+        trace_buf8  = trace_buffer[8];
+        trace_buf9  = trace_buffer[9];
+        trace_buf10 = trace_buffer[10];
+        trace_buf11 = trace_buffer[11];
+        trace_buf12 = trace_buffer[12];
+        trace_buf13 = trace_buffer[13];
+        trace_buf14 = trace_buffer[14];
+        trace_buf15 = trace_buffer[15];
+    end
+
+endmodule
+
+`timescale 1ns / 1ps
+
+module datapath (
+    input wire clk,
+    input wire reset,
+    
+    // Control signals
+    input wire pc_write,
+    input wire ir_write,
+    input wire reg_write,
+    input wire [1:0] alu_op,
+    input wire [1:0] pc_src,
+    input wire alu_src_a,
+    input wire alu_src_b,
+    input wire mem_to_reg,
+    input wire [2:0] state_in,
+    
+    // Memory interface
+    input wire [15:0] mem_data_in,
+    output reg [7:0] mem_addr,
+    output reg [15:0] mem_data_out,
+    
+    // Debug outputs
+    output wire [15:0] pc_out,
+    output wire [15:0] instruction_out,
+    output wire zero_flag,
+    output wire [3:0] opcode_out,
+    output wire [15:0] reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7
+);
+
+    // State definitions
+    localparam FETCH      = 3'b000;
+    localparam DECODE     = 3'b001;
+    localparam EXECUTE    = 3'b010;
+    localparam MEMORY     = 3'b011;
+    localparam WRITEBACK  = 3'b100;
+    localparam DEBUG_WAIT = 3'b101;
+    
+    // Opcode definitions
+    localparam OP_LOAD = 4'b0010;
+
+    // Program Counter
+    reg [7:0] pc;
+    
+    // Instruction Register
+    reg [15:0] ir;
+    
+    // Register File
+    reg [15:0] registers [0:7];
+    
+    // ALU signals
+    reg [15:0] alu_a, alu_b, alu_result;
+    reg [15:0] alu_result_reg;
+    reg zero;
+    
+    // Data register to hold loaded data
+    reg [15:0] data_reg;
+    
+    // Instruction fields
+    wire [3:0] opcode = ir[15:12];
+    wire [2:0] rd = ir[11:9];
+    wire [2:0] rs1 = ir[8:6];
+    wire [5:0] low6 = ir[5:0];
+    wire [2:0] rs2 = low6[2:0];
+    wire [5:0] imm6 = low6;
+    wire [15:0] imm_ext = {{10{imm6[5]}}, imm6};
+    
+    // Outputs
+    assign pc_out = {8'b0, pc};
+    assign instruction_out = ir;
+    assign zero_flag = zero;
+    assign opcode_out = opcode;
+    assign reg0 = registers[0];
+    assign reg1 = registers[1];
+    assign reg2 = registers[2];
+    assign reg3 = registers[3];
+    assign reg4 = registers[4];
+    assign reg5 = registers[5];
+    assign reg6 = registers[6];
+    assign reg7 = registers[7];
+    
+    // Program Counter Logic
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            pc <= 8'b0;
+        else if (pc_write) begin
+            case (pc_src)
+                2'b00: pc <= pc + 1;
+                2'b01: pc <= pc + imm_ext[7:0];
+                2'b10: pc <= imm_ext[7:0];
+                default: pc <= pc + 1;
+            endcase
+        end
+    end
+    
+    // Instruction Register
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            ir <= 16'b0;
+        else if (ir_write)
+            ir <= mem_data_in;
+    end
+    
+    // CORRECTED: Capture loaded data based on opcode during MEMORY state
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            data_reg <= 16'b0;
+        else if (state_in == MEMORY && opcode == OP_LOAD)
+            data_reg <= mem_data_in;
+    end
+    
+    // Register File
+    integer i;
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            for (i = 0; i < 8; i = i + 1)
+                registers[i] <= 16'b0;
+        end
+        else if (reg_write) begin
+            if (rd != 3'b0)
+                registers[rd] <= mem_to_reg ? data_reg : alu_result_reg;
+        end
+    end
+    
+    // Register ALU result
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            alu_result_reg <= 16'b0;
+        else
+            alu_result_reg <= alu_result;
+    end
+    
+    // ALU Source Selection
+    always @(*) begin
+        alu_a = alu_src_a ? registers[rs1] : 16'b0;
+        alu_b = alu_src_b ? imm_ext : registers[rs2];
+    end
+    
+    // ALU Operations
+    always @(*) begin
+        case (alu_op)
+            2'b00: alu_result = alu_a + alu_b;
+            2'b01: alu_result = alu_a - alu_b;
+            2'b10: alu_result = alu_a & alu_b;
+            2'b11: alu_result = alu_a | alu_b;
+            default: alu_result = 16'b0;
+        endcase
+        zero = (alu_result == 16'b0);
+    end
+    
+    // Memory Address and Data
+    always @(*) begin
+        if (state_in == FETCH) begin
+            mem_addr = pc;
+            mem_data_out = 16'b0;
+        end
+        else begin
+            mem_addr = alu_result_reg[7:0];
+            mem_data_out = registers[rs2];
+        end
+    end
+
+endmodule
+
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// File: controller.v
+// Student A - FSM Controller (CORRECTED VERSION)
+// Multicycle processor control unit with debug support
+//////////////////////////////////////////////////////////////////////////////////
+
+module controller (
+    input wire clk,
+    input wire reset,
+    input wire debug_step,        // Single-step debug signal (from debug_interface)
+    input wire [3:0] opcode,      // Instruction opcode (from datapath)
+    input wire zero_flag,         // ALU zero flag (from datapath)
+    
+    output reg pc_write,          // Program counter write enable
+    output reg mem_read,          // Memory read enable
+    output reg mem_write,         // Memory write enable
+    output reg ir_write,          // Instruction register write
+    output reg reg_write,         // Register file write enable
+    output reg [1:0] alu_op,      // ALU operation
+    output reg [1:0] pc_src,      // PC source select
+    output reg alu_src_a,         // ALU source A select (informational)
+    output reg alu_src_b,         // ALU source B select (informational)
+    output reg mem_to_reg,        // Memory to register select
+    output reg [2:0] state_out    // Current state (for debugging)
+);
+
+    // State definitions
+    localparam FETCH      = 3'b000;
+    localparam DECODE     = 3'b001;
+    localparam EXECUTE    = 3'b010;
+    localparam MEMORY     = 3'b011;
+    localparam WRITEBACK  = 3'b100;
+    localparam DEBUG_WAIT = 3'b101;
+
+    // Opcode definitions (must match datapath)
+    localparam OP_ADD   = 4'b0000;
+    localparam OP_SUB   = 4'b0001;
+    localparam OP_LOAD  = 4'b0010;
+    localparam OP_STORE = 4'b0011;
+    localparam OP_JUMP  = 4'b0100;
+    localparam OP_BEQ   = 4'b0101;
+
+    reg [2:0] state, next_state;
+
+    // State register
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            state <= FETCH;
+        else
+            state <= next_state;
+    end
+
+    // Next state logic with debug support
+    always @(*) begin
+        case (state)
+            FETCH: 
+                next_state = DECODE;
+            
+            DECODE: 
+                next_state = DEBUG_WAIT;
+            
+            DEBUG_WAIT: 
+                next_state = debug_step ? EXECUTE : DEBUG_WAIT;
+            
+            EXECUTE: 
+                next_state = MEMORY;
+            
+            MEMORY: begin
+                // For STORE we don't need a WRITEBACK (store is done in MEMORY)
+                if (opcode == OP_STORE)
+                    next_state = FETCH;
+                else if (opcode == OP_LOAD || opcode == OP_ADD || opcode == OP_SUB)
+                    next_state = WRITEBACK;
+                else
+                    next_state = FETCH;
+            end
+            
+            WRITEBACK:
+                next_state = FETCH;
+            
+            default:
+                next_state = FETCH;
+        endcase
+    end
+
+    // Control signal generation
+    always @(*) begin
+        // Default values
+        pc_write = 1'b0;
+        mem_read = 1'b0;
+        mem_write = 1'b0;
+        ir_write = 1'b0;
+        reg_write = 1'b0;
+        alu_op = 2'b00;
+        pc_src = 2'b00;
+        alu_src_a = 1'b0;
+        alu_src_b = 1'b0;
+        mem_to_reg = 1'b0;
+        state_out = state;
+
+        case (state)
+            FETCH: begin
+                mem_read = 1'b1;    // read instruction
+                ir_write = 1'b1;    // write instruction register
+                pc_write = 1'b1;    // increment PC (pc_src selects +1)
+                pc_src = 2'b00;     // PC + 1
+            end
+
+            DECODE: begin
+                // No strobes required here in this simple design
+            end
+
+            DEBUG_WAIT: begin
+                // Wait until debug_step supplies a pulse to advance to EXECUTE
+            end
+
+            EXECUTE: begin
+                // Default: no memory ops here (address calculation only)
+                case (opcode)
+                    OP_ADD: begin
+                        alu_src_a = 1'b1;  // rs1
+                        alu_src_b = 1'b0;  // rs2
+                        alu_op = 2'b00;    // ADD
+                    end
+
+                    OP_SUB: begin
+                        alu_src_a = 1'b1;
+                        alu_src_b = 1'b0;
+                        alu_op = 2'b01;    // SUB
+                    end
+
+                    OP_LOAD: begin
+                        // LOAD uses absolute immediate as address
+                        // Datapath will use immediate directly for address calc
+                        alu_src_a = 1'b0;  // force ZERO (informational)
+                        alu_src_b = 1'b1;  // immediate
+                        alu_op = 2'b00;    // ADD (imm -> alu_result)
+                    end
+
+                    OP_STORE: begin
+                        // STORE uses absolute immediate as address
+                        alu_src_a = 1'b0;
+                        alu_src_b = 1'b1;
+                        alu_op = 2'b00;
+                    end
+
+                    OP_JUMP: begin
+                        pc_src = 2'b10;    // jump to immediate
+                        pc_write = 1'b1;
+                    end
+
+                    OP_BEQ: begin
+                        // Compare: do subtract to set zero flag, branch if zero
+                        alu_src_a = 1'b1;  // rs1
+                        alu_src_b = 1'b0;  // rs2
+                        alu_op = 2'b01;    // SUB
+                        if (zero_flag) begin
+                            pc_src = 2'b01; // branch offset
+                            pc_write = 1'b1;
+                        end
+                    end
+
+                    default: begin
+                        // NOP or undefined op - do nothing
+                    end
+                endcase
+            end
+
+            MEMORY: begin
+                // Memory access: either read (LOAD) or write (STORE)
+                case (opcode)
+                    OP_LOAD: begin
+                        mem_read = 1'b1;
+                    end
+                    OP_STORE: begin
+                        mem_write = 1'b1;
+                    end
+                    default: begin
+                        // no memory op
+                    end
+                endcase
+            end
+
+            WRITEBACK: begin
+                case (opcode)
+                    OP_ADD, OP_SUB: begin
+                        reg_write = 1'b1;
+                        mem_to_reg = 1'b0;  // write ALU result
+                    end
+                    OP_LOAD: begin
+                        reg_write = 1'b1;
+                        mem_to_reg = 1'b1;  // write memory data
+                    end
+                    default: begin
+                        reg_write = 1'b0;
+                    end
+                endcase
+            end
+        endcase
+    end
+
+endmodule
+
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 14.11.2025 21:56:18
+// Design Name: 
+// Module Name: debug_interface
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+// File: debug_interface.v
+// Student C - Debug Logic (CORRECTED VERSION)
+// Debug registers, control, and monitoring interface
+
+module debug_interface (
+    input wire clk,
+    input wire reset,
+    
+    // Debug control inputs
+    input wire debug_enable,      // Enable debug mode
+    input wire debug_step_btn,    // Step button (active high)
+    
+    // Processor state inputs
+    input wire [15:0] pc_in,
+    input wire [15:0] instruction_in,
+    input wire [2:0] state_in,
+    input wire [15:0] reg0, reg1, reg2, reg3, reg4, reg5, reg6, reg7,
+    
+    // Debug outputs
+    output reg debug_step,         // Single-step pulse to controller
+    output reg [15:0] debug_pc,    // Current PC for display
+    output reg [15:0] debug_ir,    // Current instruction
+    output reg [2:0] debug_state,  // Current state
+    
+    // Debug registers (read by external interface)
+    output reg [15:0] debug_reg0,
+    output reg [15:0] debug_reg1,
+    output reg [15:0] debug_reg2,
+    output reg [15:0] debug_reg3,
+    output reg [15:0] debug_reg4,
+    output reg [15:0] debug_reg5,
+    output reg [15:0] debug_reg6,
+    output reg [15:0] debug_reg7,
+    output reg [31:0] cycle_count
+);
+
+    // Button debouncing and edge detection - IMPROVED
+    reg [3:0] step_btn_sync;
+    reg step_btn_prev;
+    wire step_btn_edge;
+    
+    // Synchronize button input (for metastability) - 4 stages for better debouncing
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            step_btn_sync <= 4'b0;
+        else
+            step_btn_sync <= {step_btn_sync[2:0], debug_step_btn};
+    end
+    
+    // Edge detection for step button - rising edge
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            step_btn_prev <= 1'b0;
+        else
+            step_btn_prev <= step_btn_sync[3];
+    end
+    
+    assign step_btn_edge = step_btn_sync[3] & ~step_btn_prev;
+    
+    // Generate single-step pulse - FIXED: proper behavior
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            debug_step <= 1'b0;
+        else if (debug_enable)
+            debug_step <= step_btn_edge;  // Pulse on button press
+        else
+            debug_step <= 1'b1;  // Auto-step when debug disabled
+    end
+    
+    // Capture processor state
+    always @(posedge clk or posedge reset) begin
+        if (reset) begin
+            debug_pc <= 16'b0;
+            debug_ir <= 16'b0;
+            debug_state <= 3'b0;
+            debug_reg0 <= 16'b0;
+            debug_reg1 <= 16'b0;
+            debug_reg2 <= 16'b0;
+            debug_reg3 <= 16'b0;
+            debug_reg4 <= 16'b0;
+            debug_reg5 <= 16'b0;
+            debug_reg6 <= 16'b0;
+            debug_reg7 <= 16'b0;
+        end
+        else begin
+            debug_pc <= pc_in;
+            debug_ir <= instruction_in;
+            debug_state <= state_in;
+            debug_reg0 <= reg0;
+            debug_reg1 <= reg1;
+            debug_reg2 <= reg2;
+            debug_reg3 <= reg3;
+            debug_reg4 <= reg4;
+            debug_reg5 <= reg5;
+            debug_reg6 <= reg6;
+            debug_reg7 <= reg7;
+        end
+    end
+    
+    // Cycle counter
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            cycle_count <= 32'b0;
+        else
+            cycle_count <= cycle_count + 1;
+    end
+
+endmodule
+
+`timescale 1ns / 1ps
+
+module tb_processor;
+
+    reg clk;
+    reg reset;
+    reg debug_enable;
+    reg debug_step_btn;
+    reg trace_enable;          // ADDED: Missing signal
+    
+    wire [15:0] debug_pc;
+    wire [15:0] debug_instruction;
+    wire [2:0]  debug_state;
+    wire [15:0] debug_reg0, debug_reg1, debug_reg2, debug_reg3;
+    wire [15:0] debug_reg4, debug_reg5, debug_reg6, debug_reg7;
+    wire [31:0] cycle_count;
+    wire [15:0] trace_buf0, trace_buf1, trace_buf2, trace_buf3;
+    wire [15:0] trace_buf4, trace_buf5, trace_buf6, trace_buf7;
+    wire [15:0] trace_buf8, trace_buf9, trace_buf10, trace_buf11;
+    wire [15:0] trace_buf12, trace_buf13, trace_buf14, trace_buf15;
+    wire [3:0] trace_count;
+    wire debug_step_out;       // ADDED: Debug observability
+
+    processor_top uut (
+        .clk(clk),
+        .reset(reset),
+        .debug_enable(debug_enable),
+        .debug_step_btn(debug_step_btn),
+        .trace_enable(trace_enable),     // ADDED: Connect trace_enable
+        .debug_pc(debug_pc),
+        .debug_instruction(debug_instruction),
+        .debug_state(debug_state),
+        .debug_reg0(debug_reg0),
+        .debug_reg1(debug_reg1),
+        .debug_reg2(debug_reg2),
+        .debug_reg3(debug_reg3),
+        .debug_reg4(debug_reg4),
+        .debug_reg5(debug_reg5),
+        .debug_reg6(debug_reg6),
+        .debug_reg7(debug_reg7),
+        .cycle_count(cycle_count),
+        .trace_buf0(trace_buf0),
+        .trace_buf1(trace_buf1),
+        .trace_buf2(trace_buf2),
+        .trace_buf3(trace_buf3),
+        .trace_buf4(trace_buf4),
+        .trace_buf5(trace_buf5),
+        .trace_buf6(trace_buf6),
+        .trace_buf7(trace_buf7),
+        .trace_buf8(trace_buf8),
+        .trace_buf9(trace_buf9),
+        .trace_buf10(trace_buf10),
+        .trace_buf11(trace_buf11),
+        .trace_buf12(trace_buf12),
+        .trace_buf13(trace_buf13),
+        .trace_buf14(trace_buf14),
+        .trace_buf15(trace_buf15),
+        .trace_count(trace_count),
+        .debug_step_out(debug_step_out)  // ADDED: Connect debug_step_out
+    );
+
+    // 100MHz clock
+    initial begin
+        clk = 0;
+        forever #5 clk = ~clk;
+    end
+
+    task display_state;
+        begin
+            $display("T=%0t | PC=%3d | IR=%h | ST=%0d | R1=%3d R2=%3d R3=%3d R4=%3d R5=%3d", 
+                     $time, debug_pc[7:0], debug_instruction, debug_state,
+                     debug_reg1, debug_reg2, debug_reg3, debug_reg4, debug_reg5);
+        end
+    endtask
+    
+    // Monitor control signals
+    always @(posedge clk) begin
+        if (!reset && debug_state == 3'b100) begin  // WRITEBACK state
+            $display("  CTRL: reg_write=%b, mem_to_reg=%b, rd=%0d", 
+                     uut.ctrl.reg_write, uut.ctrl.mem_to_reg, uut.dp.rd);
+        end
+    end
+    
+    initial begin
+        // Initialize ALL signals
+        reset = 1;
+        debug_enable = 0;
+        debug_step_btn = 0;
+        trace_enable = 1;        // ADDED: Enable trace buffer
+
+        $display("\n========================================");
+        $display(" MULTICYCLE PROCESSOR TESTBENCH START ");
+        $display("========================================");
+        $display("Calculating 5! = 120");
+        $display("Time  | PC  | Instruction | ST | R1  | R2  | R3  | R4  | R5");
+        $display("------+-----+-------------+----+-----+-----+-----+-----+----");
+
+        #30 reset = 0;
+
+        // Wait for completion or timeout
+        wait(debug_pc == 29 || $time >= 500000);
+
+        #100;
+
+        $display("\n========================================");
+        $display("           SIMULATION RESULTS");
+        $display("========================================");
+        $display("Final PC:          %0d", debug_pc);
+        $display("Final R1 (N):      %0d", debug_reg1);
+        $display("Final R2 (Result): %0d", debug_reg2);
+        $display("Final R3 (Const):  %0d", debug_reg3);
+        $display("Final R4 (Temp):   %0d", debug_reg4);
+        $display("Total Cycles:      %0d", cycle_count);
+
+        if (debug_reg2 == 120)
+            $display("\n✓✓✓ TEST PASSED! 5! = 120 ✓✓✓\n");
+        else
+            $display("\n✗✗✗ TEST FAILED! Expected 120, got %0d ✗✗✗\n", debug_reg2);
+
+        // Print trace buffer
+        $display("\n===== EXECUTION TRACE BUFFER =====");
+        $display("Trace Count: %0d/16", trace_count);
+        $display("Index | Instruction (hex)");
+        $display("------+------------------");
+        if (trace_count > 0)  $display("  0   | %h", trace_buf0);
+        if (trace_count > 1)  $display("  1   | %h", trace_buf1);
+        if (trace_count > 2)  $display("  2   | %h", trace_buf2);
+        if (trace_count > 3)  $display("  3   | %h", trace_buf3);
+        if (trace_count > 4)  $display("  4   | %h", trace_buf4);
+        if (trace_count > 5)  $display("  5   | %h", trace_buf5);
+        if (trace_count > 6)  $display("  6   | %h", trace_buf6);
+        if (trace_count > 7)  $display("  7   | %h", trace_buf7);
+        if (trace_count > 8)  $display("  8   | %h", trace_buf8);
+        if (trace_count > 9)  $display("  9   | %h", trace_buf9);
+        if (trace_count > 10) $display(" 10   | %h", trace_buf10);
+        if (trace_count > 11) $display(" 11   | %h", trace_buf11);
+        if (trace_count > 12) $display(" 12   | %h", trace_buf12);
+        if (trace_count > 13) $display(" 13   | %h", trace_buf13);
+        if (trace_count > 14) $display(" 14   | %h", trace_buf14);
+        if (trace_count > 15) $display(" 15   | %h", trace_buf15);
+
+        $display("\n========================================\n");
+        $finish;
+    end
+
+    // Monitor WRITEBACK state
+    always @(posedge clk) begin
+        if (!reset && !debug_enable && debug_state == 3'b100)
+            display_state();
+    end
+
+    // Timeout watchdog
+    initial begin
+        #500000;
+        $display("\n*** TIMEOUT: Simulation exceeded 500us ***");
+        $display("Last PC: %0d", debug_pc);
+        $display("Last R2: %0d", debug_reg2);
+        $finish;
+    end
+
+endmodule
+
+
+################################################################################
+# Clock - 100 MHz on Basys3
+################################################################################
+set_property PACKAGE_PIN W5 [get_ports clk]
+set_property IOSTANDARD LVCMOS33 [get_ports clk]
+
+create_clock -period 10.000 -name sys_clk [get_ports clk]
+
+################################################################################
+# Reset button (active HIGH)
+################################################################################
+set_property PACKAGE_PIN U18 [get_ports reset]
+set_property IOSTANDARD LVCMOS33 [get_ports reset]
+
+################################################################################
+# Debug enable switch (SW0)
+################################################################################
+set_property PACKAGE_PIN V17 [get_ports debug_enable]
+set_property IOSTANDARD LVCMOS33 [get_ports debug_enable]
+
+################################################################################
+# Debug step button (BTNC)
+################################################################################
+set_property PACKAGE_PIN T18 [get_ports debug_step_btn]
+set_property IOSTANDARD LVCMOS33 [get_ports debug_step_btn]
+
+################################################################################
+# Debug outputs on LEDs
+#   debug_pc[7:0] → LED0-LED7
+#   debug_state[2:0] → LED8-LED10
+#   debug_reg2 lower 4 bits → LED11-LED14
+#   cycle_count[0] → LED15
+################################################################################
+
+# PC lower 8 bits
+set_property PACKAGE_PIN U16 [get_ports {debug_pc[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[0]}]
+
+set_property PACKAGE_PIN E19 [get_ports {debug_pc[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[1]}]
+
+set_property PACKAGE_PIN U19 [get_ports {debug_pc[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[2]}]
+
+set_property PACKAGE_PIN V19 [get_ports {debug_pc[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[3]}]
+
+set_property PACKAGE_PIN U14 [get_ports {debug_pc[4]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[4]}]
+
+set_property PACKAGE_PIN V14 [get_ports {debug_pc[5]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[5]}]
+
+set_property PACKAGE_PIN V13 [get_ports {debug_pc[6]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[6]}]
+
+set_property PACKAGE_PIN U13 [get_ports {debug_pc[7]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_pc[7]}]
+
+# State bits
+set_property PACKAGE_PIN W18 [get_ports {debug_state[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_state[0]}]
+
+set_property PACKAGE_PIN W19 [get_ports {debug_state[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_state[1]}]
+
+set_property PACKAGE_PIN U15 [get_ports {debug_state[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_state[2]}]
+
+# R2 lower 4 bits
+set_property PACKAGE_PIN L1 [get_ports {debug_reg2[0]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_reg2[0]}]
+
+set_property PACKAGE_PIN P1 [get_ports {debug_reg2[1]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_reg2[1]}]
+
+set_property PACKAGE_PIN N3 [get_ports {debug_reg2[2]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_reg2[2]}]
+
+set_property PACKAGE_PIN P3 [get_ports {debug_reg2[3]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {debug_reg2[3]}]
+
+# LED15 = cycle_count[0]
+set_property PACKAGE_PIN N4 [get_ports cycle_count[0]]
+set_property IOSTANDARD LVCMOS33 [get_ports cycle_count[0]]
+
+################################################################################
+# Timing constraints
+################################################################################
+set_input_delay  -clock sys_clk 2.0 [all_inputs]
+set_output_delay -clock sys_clk 2.0 [all_outputs]
+
+################################################################################
+# Configuration
+################################################################################
+set_property CONFIG_VOLTAGE 3.3 [current_design]
+set_property CFGBVS VCCO [current_design]

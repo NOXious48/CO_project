@@ -1,0 +1,57 @@
+Time resolution is 1 ps
+
+========================================
+ MULTICYCLE PROCESSOR TESTBENCH START 
+========================================
+Calculating 5! = 120
+Time  | PC  | Instruction | ST | R1  | R2  | R3  | R4  | R5
+------+-----+-------------+----+-----+-----+-----+-----+----
+  CTRL: reg_write=0, mem_to_reg=0, rd=1
+T=95000 | PC=  1 | IR=2228 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=2
+T=155000 | PC=  2 | IR=2429 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=3
+T=215000 | PC=  3 | IR=262a | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=4
+T=275000 | PC=  4 | IR=0800 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=5
+T=335000 | PC=  5 | IR=0a00 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=4
+T=395000 | PC=  6 | IR=0902 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=5
+T=455000 | PC=  7 | IR=0b43 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=6
+T=515000 | PC=  8 | IR=1c45 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+  CTRL: reg_write=0, mem_to_reg=0, rd=1
+T=625000 | PC= 12 | IR=1243 | ST=4 | R1=  0 R2=  0 R3=  0 R4=  0 R5=  0
+
+========================================
+           SIMULATION RESULTS
+========================================
+Final PC:          30
+Final R1 (N):      0
+Final R2 (Result): 0
+Final R3 (Const):  0
+Final R4 (Temp):   0
+Total Cycles:      73
+
+✗✗✗ TEST FAILED! Expected 120, got 0 ✗✗✗
+
+
+===== EXECUTION TRACE BUFFER =====
+Trace Count: 9/16
+Index | Instruction (hex)
+------+------------------
+  0   | 2228
+  1   | 2429
+  2   | 262a
+  3   | 0800
+  4   | 0a00
+  5   | 0902
+  6   | 0b43
+  7   | 1c45
+  8   | 1243
+
+========================================
+
+$finish called at time : 765 ns : File "C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sim_1/new/tb_processor.v" Line 143

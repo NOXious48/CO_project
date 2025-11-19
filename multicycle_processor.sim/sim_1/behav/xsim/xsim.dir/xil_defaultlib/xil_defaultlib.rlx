@@ -1,0 +1,11 @@
+0.7
+2020.2
+May 22 2025
+00:13:55
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.sim/sim_1/behav/xsim/glbl.v,1741209010,verilog,,,,glbl,,,,,,,,
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sim_1/new/tb_processor.v,1763201319,verilog,,,,tb_processor,,,../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/controller.v,1763206182,verilog,,C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/datapath.v,,controller,,,../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/datapath.v,1763205011,verilog,,C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/debug_interface.v,,datapath,,,../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/debug_interface.v,1763139184,verilog,,C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/memory_trace.v,,debug_interface,,,../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/memory_trace.v,1763202805,verilog,,C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/processor_top.v,,memory_trace,,,../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef,,,,,
+C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sources_1/new/processor_top.v,1763140282,verilog,,C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sim_1/new/tb_processor.v,,processor_top,,,../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef,,,,,

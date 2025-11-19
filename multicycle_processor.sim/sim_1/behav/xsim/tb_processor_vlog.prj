@@ -1,0 +1,14 @@
+# compile verilog/system verilog design source files
+verilog xil_defaultlib  --include "../../../../../../../../../Xilinx/Vivado/2025.1/Vivado/data/rsb/busdef" \
+"../../../../multicycle_processor.srcs/sources_1/new/controller.v" \
+"../../../../multicycle_processor.srcs/sources_1/new/datapath.v" \
+"../../../../multicycle_processor.srcs/sources_1/new/debug_interface.v" \
+"../../../../multicycle_processor.srcs/sources_1/new/memory_trace.v" \
+"../../../../multicycle_processor.srcs/sources_1/new/processor_top.v" \
+"../../../../multicycle_processor.srcs/sim_1/new/tb_processor.v" \
+
+# compile glbl module
+verilog xil_defaultlib "glbl.v"
+
+# Do not sort compile order
+nosort
