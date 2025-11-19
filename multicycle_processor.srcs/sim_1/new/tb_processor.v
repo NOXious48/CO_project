@@ -8,6 +8,12 @@ module tb_processor;
     reg debug_step_btn;
     reg trace_enable;
     
+    // --- NEW: Variables for dynamic testing ---
+    integer input_N = 6;       // Change this to test different numbers (e.g., 5, 6, 7)
+    integer expected_result;
+    integer i;
+    // ------------------------------------------
+
     wire [15:0] debug_pc;
     wire [15:0] debug_instruction;
     wire [2:0]  debug_state;
@@ -65,38 +71,20 @@ module tb_processor;
         forever #5 clk = ~clk;
     end
 
-    // Task definition kept but silence the output
     task display_state;
         begin
-            // Commented out to silence per-cycle logging
-            /*
             $display("T=%0t | PC=%3d | IR=%h | ST=%0d | R1=%3d R2=%3d R3=%3d R4=%3d R5=%3d", 
                      $time, debug_pc[7:0], debug_instruction, debug_state,
                      debug_reg1, debug_reg2, debug_reg3, debug_reg4, debug_reg5);
-            */
         end
     endtask
     
-    // Enhanced monitoring during WRITEBACK - Silenced
+    // Monitor control signals
     always @(posedge clk) begin
         if (!reset && debug_state == 3'b100) begin  // WRITEBACK state
-            // Commented out to silence writeback logging
-            /*
-            $display("  WB: reg_write=%b, mem_to_reg=%b, rd=%0d, alu_result=%h, mem_data=%h", 
-                     uut.ctrl.reg_write, uut.ctrl.mem_to_reg, uut.dp.rd,
-                     uut.dp.alu_result_reg, uut.dp.mem_data_reg);
-            */
-        end
-    end
-    
-    // Monitor debug_step signal - Silenced
-    always @(posedge clk) begin
-        if (!reset) begin
-            // Commented out to silence debug step logging
-            /*
-            $display("T=%0t | debug_step=%b | state=%0d | debug_step_out=%b", 
-                     $time, uut.dbg.debug_step, debug_state, debug_step_out);
-            */
+             // Uncomment below to see per-cycle writeback info
+             // $display("  CTRL: reg_write=%b, mem_to_reg=%b, rd=%0d", 
+             //          uut.ctrl.reg_write, uut.ctrl.mem_to_reg, uut.dp.rd);
         end
     end
     
@@ -107,21 +95,31 @@ module tb_processor;
         debug_step_btn = 0;
         trace_enable = 1;
 
+        // --- NEW: Dynamic Memory Injection ---
+        #1; // Wait 1ns for memory_trace.v to finish its initialization
+        
+        // Overwrite the default N=5 with our custom input_N
+        uut.mem.memory[40] = input_N; 
+        
+        // Calculate the expected factorial manually for verification
+        expected_result = 1;
+        for (i = 1; i <= input_N; i = i + 1) begin
+            expected_result = expected_result * i;
+        end
+        // -------------------------------------
+
         $display("\n========================================");
         $display(" MULTICYCLE PROCESSOR TESTBENCH START ");
         $display("========================================");
-        $display("Calculating 5! = 120... Please wait.");
+        $display("Calculating %0d! = %0d... Please wait.", input_N, expected_result);
         
-        // Removed the per-cycle header print
         // $display("Time  | PC  | Instruction | ST | R1  | R2  | R3  | R4  | R5");
         // $display("------+-----+-------------+----+-----+-----+-----+-----+----");
 
         #30 reset = 0;
 
-        // Wait for completion or timeout
-        // Note: Since we silenced the log, this wait is the only thing happening
-        wait(debug_pc == 29 || $time >= 500000); // 500us limit
-
+        // Wait for completion or timeout (500us should be enough for small factorials)
+        wait(debug_pc == 29 || $time >= 500000);
         #100;
 
         $display("\n========================================");
@@ -134,13 +132,15 @@ module tb_processor;
         $display("Final R4 (Temp):   %0d", debug_reg4);
         $display("Total Cycles:      %0d", cycle_count);
 
-        if (debug_reg2 == 120)
-            $display("\n✓✓✓ TEST PASSED! 5! = 120 ✓✓✓\n");
+        // --- NEW: Verification Logic ---
+        if (debug_reg2 == expected_result)
+            $display("\n✓✓✓ TEST PASSED! %0d! = %0d ✓✓✓\n", input_N, debug_reg2);
         else
-            $display("\n✗✗✗ TEST FAILED! Expected 120, got %0d ✗✗✗\n", debug_reg2);
+            $display("\n✗✗✗ TEST FAILED! Expected %0d, got %0d ✗✗✗\n", expected_result, debug_reg2);
+        // -------------------------------
 
-        // Trace buffer is usually helpful for the final report, keeping it in.
-        $display("===== EXECUTION TRACE BUFFER (Last 16 Ops) =====");
+        // Print trace buffer
+        $display("===== EXECUTION TRACE BUFFER =====");
         $display("Trace Count: %0d/16", trace_count);
         $display("Index | Instruction (hex)");
         $display("------+------------------");
@@ -165,16 +165,16 @@ module tb_processor;
         $finish;
     end
 
-    // Monitor WRITEBACK state - Silenced
+    // Monitor WRITEBACK state
     always @(posedge clk) begin
         if (!reset && !debug_enable && debug_state == 3'b100) begin
-             // display_state(); // Commented out
+           // display_state(); // Uncomment to see state log
         end
     end
 
     // Timeout watchdog
     initial begin
-        #500000; // 500us timeout
+        #500000;
         $display("\n*** TIMEOUT: Simulation exceeded 500us ***");
         $display("Last PC: %0d", debug_pc);
         $display("Last R2: %0d", debug_reg2);

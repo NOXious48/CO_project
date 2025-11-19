@@ -3,40 +3,40 @@ Time resolution is 1 ps
 ========================================
  MULTICYCLE PROCESSOR TESTBENCH START 
 ========================================
-Calculating 5! = 120... Please wait.
+Calculating 6! = 720... Please wait.
 
 ========================================
            SIMULATION RESULTS
 ========================================
 Final PC:          30
 Final R1 (N):      0
-Final R2 (Result): 120
+Final R2 (Result): 720
 Final R3 (Const):  1
-Final R4 (Temp):   120
-Total Cycles:      487
+Final R4 (Temp):   720
+Total Cycles:      649
 
-✓✓✓ TEST PASSED! 5! = 120 ✓✓✓
+✓✓✓ TEST PASSED! 6! = 720 ✓✓✓
 
-===== EXECUTION TRACE BUFFER (Last 16 Ops) =====
+===== EXECUTION TRACE BUFFER =====
 Trace Count: 15/16
 Index | Instruction (hex)
 ------+------------------
-  0   | 0b43
-  1   | 1c45
-  2   | 0500
-  3   | 1243
+  0   | 1c45
+  1   | 0500
+  2   | 1243
+  3   | 0800
   4   | 0a00
   5   | 0902
   6   | 0b43
   7   | 1c45
-  8   | 0902
-  9   | 0b43
- 10   | 1c45
- 11   | 0500
- 12   | 1243
- 13   | 0800
- 14   | 0a00
+  8   | 0500
+  9   | 1243
+ 10   | 0a00
+ 11   | 0902
+ 12   | 0b43
+ 13   | 1c45
+ 14   | 0902
 
 ========================================
 
-$finish called at time : 4905 ns : File "C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sim_1/new/tb_processor.v" Line 165
+$finish called at time : 6525 ns : File "C:/Users/pushp_vnmc973/Desktop/CO project/multicycle_processor/multicycle_processor.srcs/sim_1/new/tb_processor.v" Line 165
