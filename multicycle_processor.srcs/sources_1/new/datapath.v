@@ -34,10 +34,6 @@ module datapath (
     localparam EXECUTE    = 3'b010;
     localparam MEMORY     = 3'b011;
     localparam WRITEBACK  = 3'b100;
-    localparam DEBUG_WAIT = 3'b101;
-    
-    // Opcode definitions
-    localparam OP_LOAD = 4'b0010;
 
     // Program Counter
     reg [7:0] pc;
@@ -53,8 +49,8 @@ module datapath (
     reg [15:0] alu_result_reg;
     reg zero;
     
-    // Data register to hold loaded data
-    reg [15:0] data_reg;
+    // Memory data register
+    reg [15:0] mem_data_reg;
     
     // Instruction fields
     wire [3:0] opcode = ir[15:12];
@@ -101,15 +97,16 @@ module datapath (
             ir <= mem_data_in;
     end
     
-    // CORRECTED: Capture loaded data based on opcode during MEMORY state
+    // Capture memory data during MEMORY state
     always @(posedge clk or posedge reset) begin
         if (reset)
-            data_reg <= 16'b0;
-        else if (state_in == MEMORY && opcode == OP_LOAD)
-            data_reg <= mem_data_in;
+            mem_data_reg <= 16'b0;
+        else if (state_in == MEMORY)
+            mem_data_reg <= mem_data_in;
     end
     
-    // Register File
+    // Register File - CRITICAL FIX: Remove state_in check
+    // reg_write is only asserted during WRITEBACK anyway
     integer i;
     always @(posedge clk or posedge reset) begin
         if (reset) begin
@@ -117,16 +114,20 @@ module datapath (
                 registers[i] <= 16'b0;
         end
         else if (reg_write) begin
-            if (rd != 3'b0)
-                registers[rd] <= mem_to_reg ? data_reg : alu_result_reg;
+            if (rd != 3'b0) begin
+                if (mem_to_reg)
+                    registers[rd] <= mem_data_reg;
+                else
+                    registers[rd] <= alu_result_reg;
+            end
         end
     end
     
-    // Register ALU result
+    // Register ALU result during EXECUTE
     always @(posedge clk or posedge reset) begin
         if (reset)
             alu_result_reg <= 16'b0;
-        else
+        else if (state_in == EXECUTE)
             alu_result_reg <= alu_result;
     end
     
@@ -148,7 +149,7 @@ module datapath (
         zero = (alu_result == 16'b0);
     end
     
-    // Memory Address and Data
+    // Memory Address and Data Output
     always @(*) begin
         if (state_in == FETCH) begin
             mem_addr = pc;

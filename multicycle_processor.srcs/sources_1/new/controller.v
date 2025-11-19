@@ -1,16 +1,11 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// File: controller.v
-// Student A - FSM Controller (CORRECTED VERSION)
-// Multicycle processor control unit with debug support
-//////////////////////////////////////////////////////////////////////////////////
 
 module controller (
     input wire clk,
     input wire reset,
-    input wire debug_step,        // Single-step debug signal (from debug_interface)
-    input wire [3:0] opcode,      // Instruction opcode (from datapath)
-    input wire zero_flag,         // ALU zero flag (from datapath)
+    input wire debug_step,        // Single-step debug signal
+    input wire [3:0] opcode,      // Instruction opcode
+    input wire zero_flag,         // ALU zero flag
     
     output reg pc_write,          // Program counter write enable
     output reg mem_read,          // Memory read enable
@@ -19,8 +14,8 @@ module controller (
     output reg reg_write,         // Register file write enable
     output reg [1:0] alu_op,      // ALU operation
     output reg [1:0] pc_src,      // PC source select
-    output reg alu_src_a,         // ALU source A select (informational)
-    output reg alu_src_b,         // ALU source B select (informational)
+    output reg alu_src_a,         // ALU source A select
+    output reg alu_src_b,         // ALU source B select
     output reg mem_to_reg,        // Memory to register select
     output reg [2:0] state_out    // Current state (for debugging)
 );
@@ -31,9 +26,8 @@ module controller (
     localparam EXECUTE    = 3'b010;
     localparam MEMORY     = 3'b011;
     localparam WRITEBACK  = 3'b100;
-    localparam DEBUG_WAIT = 3'b101;
 
-    // Opcode definitions (must match datapath)
+    // Opcode definitions
     localparam OP_ADD   = 4'b0000;
     localparam OP_SUB   = 4'b0001;
     localparam OP_LOAD  = 4'b0010;
@@ -51,25 +45,28 @@ module controller (
             state <= next_state;
     end
 
-    // Next state logic with debug support
+    // FIXED: Next state logic - removed DEBUG_WAIT state
+    // debug_step now controls progression naturally
     always @(*) begin
         case (state)
             FETCH: 
                 next_state = DECODE;
             
             DECODE: 
-                next_state = DEBUG_WAIT;
-            
-            DEBUG_WAIT: 
-                next_state = debug_step ? EXECUTE : DEBUG_WAIT;
+                // Only advance if debug_step is high
+                next_state = debug_step ? EXECUTE : DECODE;
             
             EXECUTE: 
                 next_state = MEMORY;
             
             MEMORY: begin
-                // For STORE we don't need a WRITEBACK (store is done in MEMORY)
+                // For STORE we don't need WRITEBACK
                 if (opcode == OP_STORE)
                     next_state = FETCH;
+                // For JUMP and BEQ, go back to FETCH
+                else if (opcode == OP_JUMP || opcode == OP_BEQ)
+                    next_state = FETCH;
+                // For arithmetic and LOAD, go to WRITEBACK
                 else if (opcode == OP_LOAD || opcode == OP_ADD || opcode == OP_SUB)
                     next_state = WRITEBACK;
                 else
@@ -101,22 +98,18 @@ module controller (
 
         case (state)
             FETCH: begin
-                mem_read = 1'b1;    // read instruction
-                ir_write = 1'b1;    // write instruction register
-                pc_write = 1'b1;    // increment PC (pc_src selects +1)
+                mem_read = 1'b1;    // Read instruction
+                ir_write = 1'b1;    // Write instruction register
+                pc_write = 1'b1;    // Increment PC
                 pc_src = 2'b00;     // PC + 1
             end
 
             DECODE: begin
-                // No strobes required here in this simple design
-            end
-
-            DEBUG_WAIT: begin
-                // Wait until debug_step supplies a pulse to advance to EXECUTE
+                // Wait here if debug_step is low
+                // No control signals needed
             end
 
             EXECUTE: begin
-                // Default: no memory ops here (address calculation only)
                 case (opcode)
                     OP_ADD: begin
                         alu_src_a = 1'b1;  // rs1
@@ -125,50 +118,41 @@ module controller (
                     end
 
                     OP_SUB: begin
-                        alu_src_a = 1'b1;
-                        alu_src_b = 1'b0;
+                        alu_src_a = 1'b1;  // rs1
+                        alu_src_b = 1'b0;  // rs2
                         alu_op = 2'b01;    // SUB
                     end
 
                     OP_LOAD: begin
-                        // LOAD uses absolute immediate as address
-                        // Datapath will use immediate directly for address calc
-                        alu_src_a = 1'b0;  // force ZERO (informational)
+                        alu_src_a = 1'b0;  // 0
                         alu_src_b = 1'b1;  // immediate
-                        alu_op = 2'b00;    // ADD (imm -> alu_result)
+                        alu_op = 2'b00;    // ADD (pass through imm)
                     end
 
                     OP_STORE: begin
-                        // STORE uses absolute immediate as address
-                        alu_src_a = 1'b0;
-                        alu_src_b = 1'b1;
-                        alu_op = 2'b00;
+                        alu_src_a = 1'b0;  // 0
+                        alu_src_b = 1'b1;  // immediate
+                        alu_op = 2'b00;    // ADD (pass through imm)
                     end
 
                     OP_JUMP: begin
-                        pc_src = 2'b10;    // jump to immediate
+                        pc_src = 2'b10;    // Jump to immediate
                         pc_write = 1'b1;
                     end
 
                     OP_BEQ: begin
-                        // Compare: do subtract to set zero flag, branch if zero
                         alu_src_a = 1'b1;  // rs1
                         alu_src_b = 1'b0;  // rs2
-                        alu_op = 2'b01;    // SUB
+                        alu_op = 2'b01;    // SUB for comparison
                         if (zero_flag) begin
-                            pc_src = 2'b01; // branch offset
+                            pc_src = 2'b01; // Branch offset
                             pc_write = 1'b1;
                         end
-                    end
-
-                    default: begin
-                        // NOP or undefined op - do nothing
                     end
                 endcase
             end
 
             MEMORY: begin
-                // Memory access: either read (LOAD) or write (STORE)
                 case (opcode)
                     OP_LOAD: begin
                         mem_read = 1'b1;
@@ -176,24 +160,22 @@ module controller (
                     OP_STORE: begin
                         mem_write = 1'b1;
                     end
-                    default: begin
-                        // no memory op
-                    end
                 endcase
             end
 
             WRITEBACK: begin
+                // Enable register write for all writeback operations
+                reg_write = 1'b1;
+                
                 case (opcode)
                     OP_ADD, OP_SUB: begin
-                        reg_write = 1'b1;
-                        mem_to_reg = 1'b0;  // write ALU result
+                        mem_to_reg = 1'b0;  // Write ALU result
                     end
                     OP_LOAD: begin
-                        reg_write = 1'b1;
-                        mem_to_reg = 1'b1;  // write memory data
+                        mem_to_reg = 1'b1;  // Write memory data
                     end
                     default: begin
-                        reg_write = 1'b0;
+                        reg_write = 1'b0;  // Safety: disable for unknown opcodes
                     end
                 endcase
             end

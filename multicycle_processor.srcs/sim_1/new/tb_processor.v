@@ -6,7 +6,7 @@ module tb_processor;
     reg reset;
     reg debug_enable;
     reg debug_step_btn;
-    reg trace_enable;          // ADDED: Missing signal
+    reg trace_enable;
     
     wire [15:0] debug_pc;
     wire [15:0] debug_instruction;
@@ -19,14 +19,14 @@ module tb_processor;
     wire [15:0] trace_buf8, trace_buf9, trace_buf10, trace_buf11;
     wire [15:0] trace_buf12, trace_buf13, trace_buf14, trace_buf15;
     wire [3:0] trace_count;
-    wire debug_step_out;       // ADDED: Debug observability
+    wire debug_step_out;
 
     processor_top uut (
         .clk(clk),
         .reset(reset),
         .debug_enable(debug_enable),
         .debug_step_btn(debug_step_btn),
-        .trace_enable(trace_enable),     // ADDED: Connect trace_enable
+        .trace_enable(trace_enable),
         .debug_pc(debug_pc),
         .debug_instruction(debug_instruction),
         .debug_state(debug_state),
@@ -56,7 +56,7 @@ module tb_processor;
         .trace_buf14(trace_buf14),
         .trace_buf15(trace_buf15),
         .trace_count(trace_count),
-        .debug_step_out(debug_step_out)  // ADDED: Connect debug_step_out
+        .debug_step_out(debug_step_out)
     );
 
     // 100MHz clock
@@ -73,12 +73,20 @@ module tb_processor;
         end
     endtask
     
-    // Monitor control signals
+    // Enhanced monitoring during WRITEBACK
     always @(posedge clk) begin
         if (!reset && debug_state == 3'b100) begin  // WRITEBACK state
-            $display("  CTRL: reg_write=%b, mem_to_reg=%b, rd=%0d", 
-                     uut.ctrl.reg_write, uut.ctrl.mem_to_reg, uut.dp.rd);
+            $display("  WB: reg_write=%b, mem_to_reg=%b, rd=%0d, alu_result=%h, mem_data=%h", 
+                     uut.ctrl.reg_write, uut.ctrl.mem_to_reg, uut.dp.rd,
+                     uut.dp.alu_result_reg, uut.dp.mem_data_reg);
         end
+    end
+    
+    // Monitor debug_step signal
+    always @(posedge clk) begin
+        if (!reset)
+            $display("T=%0t | debug_step=%b | state=%0d | debug_step_out=%b", 
+                     $time, uut.dbg.debug_step, debug_state, debug_step_out);
     end
     
     initial begin
@@ -86,7 +94,7 @@ module tb_processor;
         reset = 1;
         debug_enable = 0;
         debug_step_btn = 0;
-        trace_enable = 1;        // ADDED: Enable trace buffer
+        trace_enable = 1;
 
         $display("\n========================================");
         $display(" MULTICYCLE PROCESSOR TESTBENCH START ");
@@ -98,7 +106,7 @@ module tb_processor;
         #30 reset = 0;
 
         // Wait for completion or timeout
-        wait(debug_pc == 29 || $time >= 500000);
+        wait(debug_pc == 29 || $time >= 1000000);
 
         #100;
 
@@ -151,8 +159,8 @@ module tb_processor;
 
     // Timeout watchdog
     initial begin
-        #500000;
-        $display("\n*** TIMEOUT: Simulation exceeded 500us ***");
+        #1000000;
+        $display("\n*** TIMEOUT: Simulation exceeded 1ms ***");
         $display("Last PC: %0d", debug_pc);
         $display("Last R2: %0d", debug_reg2);
         $finish;

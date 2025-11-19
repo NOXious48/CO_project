@@ -1,27 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 14.11.2025 21:56:18
-// Design Name: 
-// Module Name: debug_interface
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-// File: debug_interface.v
-// Student C - Debug Logic (CORRECTED VERSION)
-// Debug registers, control, and monitoring interface
 
 module debug_interface (
     input wire clk,
@@ -55,12 +32,12 @@ module debug_interface (
     output reg [31:0] cycle_count
 );
 
-    // Button debouncing and edge detection - IMPROVED
+    // Button debouncing and edge detection
     reg [3:0] step_btn_sync;
     reg step_btn_prev;
     wire step_btn_edge;
     
-    // Synchronize button input (for metastability) - 4 stages for better debouncing
+    // Synchronize button input (for metastability)
     always @(posedge clk or posedge reset) begin
         if (reset)
             step_btn_sync <= 4'b0;
@@ -78,14 +55,18 @@ module debug_interface (
     
     assign step_btn_edge = step_btn_sync[3] & ~step_btn_prev;
     
-    // Generate single-step pulse - FIXED: proper behavior
+    // CRITICAL FIX: Generate debug_step correctly
+    // In normal mode (debug_enable=0), always output HIGH
+    // In debug mode (debug_enable=1), pulse on button press
     always @(posedge clk or posedge reset) begin
         if (reset)
-            debug_step <= 1'b0;
-        else if (debug_enable)
-            debug_step <= step_btn_edge;  // Pulse on button press
-        else
-            debug_step <= 1'b1;  // Auto-step when debug disabled
+            debug_step <= 1'b1;  // Start with enabled
+        else begin
+            if (!debug_enable)
+                debug_step <= 1'b1;  // Always high in normal mode
+            else
+                debug_step <= step_btn_edge;  // Pulse on button in debug mode
+        end
     end
     
     // Capture processor state
