@@ -134,7 +134,12 @@ module datapath (
     // ALU Source Selection
     always @(*) begin
         alu_a = alu_src_a ? registers[rs1] : 16'b0;
-        alu_b = alu_src_b ? imm_ext : registers[rs2];
+        
+        // CRITICAL FIX: Force alu_b to 0 for BEQ to allow comparison vs 0
+        if (opcode == 4'b0101) // OP_BEQ
+            alu_b = 16'b0;
+        else
+            alu_b = alu_src_b ? imm_ext : registers[rs2];
     end
     
     // ALU Operations

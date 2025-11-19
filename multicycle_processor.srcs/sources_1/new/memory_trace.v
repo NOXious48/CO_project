@@ -41,36 +41,44 @@ module memory_trace (
         // Clear all memory
         for (i = 0; i < 256; i = i + 1)
             memory[i] = 16'h0000;
-        
+
         // Data memory (addresses 40-42)
-        memory[40] = 16'd5;    // N = 5
-        memory[41] = 16'd1;    // Result = 1
-        memory[42] = 16'd1;    // Const 1
+        memory[40] = 16'd5;   // N = 5
+        memory[41] = 16'd1;   // Result = 1
+        memory[42] = 16'd1;   // Const 1
 
         // Program instructions
-        memory[0]  = 16'h2228;  // LOAD R1, [40]  (N=5)
-        memory[1]  = 16'h2429;  // LOAD R2, [41]  (result=1)
-        memory[2]  = 16'h262a;  // LOAD R3, [42]  (const=1)
+        memory[0]  = 16'h2228; // LOAD R1, [40]  (N=5)
+        memory[1]  = 16'h2429; // LOAD R2, [41]  (result=1)
+        memory[2]  = 16'h262a; // LOAD R3, [42]  (const=1)
         
-        memory[3]  = 16'h0800;  // ADD R4, R0, 0  (R4=0, temp accumulator)
-        memory[4]  = 16'h0a00;  // ADD R5, R0, 0  (R5=0, loop counter)
+        memory[3]  = 16'h0800; // ADD R4, R0, 0  (R4=0, temp accumulator)
+        memory[4]  = 16'h0a00; // ADD R5, R0, 0  (R5=0, loop counter)
 
-        // INNER LOOP (address 5-9) - Multiply R2 by R1
-        memory[5]  = 16'h0902;  // ADD R4, R4, R2  (accumulate)
-        memory[6]  = 16'h0b43;  // ADD R5, R5, R3  (R5++, increment counter)
-        memory[7]  = 16'h1c45;  // SUB R6, R1, R5  (check if R5 == R1)
-        memory[8]  = 16'h5c02;  // BEQ R6,R0,+2  (if loop done, skip JUMP)
-        memory[9]  = 16'h4005;  // JUMP 5  (repeat inner loop)
+        // INNER LOOP (Multiply R2 * R1)
+        memory[5]  = 16'h0902; // ADD R4, R4, R2  (accumulate)
+        memory[6]  = 16'h0b43; // ADD R5, R5, R3  (R5++, increment counter)
+        memory[7]  = 16'h1c45; // SUB R6, R1, R5  (check if R5 == R1)
         
-        // OUTER LOOP (address 10-13) - Decrement N, repeat until N==0
-        memory[10] = 16'h0900;  // ADD R2, R4, 0  (save multiplication result to R2)
-        memory[11] = 16'h1243;  // SUB R1, R1, R3  (N--, decrement N)
-        memory[12] = 16'h5210;  // BEQ R1,R0,+16  (if N==0, jump to STORE at address 28)
-        memory[13] = 16'h4003;  // JUMP 3  (else repeat from outer loop start)
+        // FIXED: Offset changed to 1 (was 2) to hit address 10
+        memory[8]  = 16'h5181; // BEQ R6, R0, +1  (if loop done, go to save)
+        
+        memory[9]  = 16'h4005; // JUMP 5  (repeat inner loop)
+        
+        // OUTER LOOP (Decrement N)
+        // FIXED: Destination changed to R2 (was R4)
+        memory[10] = 16'h0500; // ADD R2, R4, 0  (save result R4 -> R2)
+        
+        memory[11] = 16'h1243; // SUB R1, R1, R3  (N--)
+        
+        // FIXED: Changed to compare R1 (N) instead of R0, and offset 15
+        memory[12] = 16'h504F; // BEQ R1, R0, +15 (if N==0, go to HALT)
+        
+        memory[13] = 16'h4003; // JUMP 3  (repeat outer loop)
 
-        // HALT (address 28-29)
-        memory[28] = 16'h3429;  // STORE R2, [41]  (save result to memory)
-        memory[29] = 16'h401d;  // JUMP 29  (infinite halt loop)
+        // HALT
+        memory[28] = 16'h3429; // STORE R2, [41]
+        memory[29] = 16'h401d; // JUMP 29  (Halt)
     end
 
     // Memory write (synchronous)
